@@ -1,0 +1,117 @@
+.rule {
+  height: 4px;
+  background: var(--th-accent-rule);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--th-space-3);
+  padding: var(--th-space-3) var(--th-space-4);
+  border-bottom: 1px solid var(--th-border);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--th-space-3);
+  text-decoration: none;
+  color: inherit;
+}
+
+.wordmark {
+  display: flex;
+  flex-direction: column;
+}
+.product {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--th-navy);
+}
+.company {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--th-purple);
+}
+
+.envBadge {
+  font-size: 14px;
+  font-weight: 600;
+  padding: var(--th-space-1) var(--th-space-3);
+  border-radius: 999px;
+  border: 1px solid var(--th-warning);
+  color: var(--th-warning);
+  background: #fff8ec;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 80px);
+}
+
+.nav {
+  border-right: 1px solid var(--th-border);
+  background: var(--th-lavender);
+  padding: var(--th-space-4) var(--th-space-3);
+}
+.nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--th-space-1);
+}
+.navItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--th-space-2) var(--th-space-3);
+  border-radius: 8px;
+  color: var(--th-navy);
+  text-decoration: none;
+}
+.navItem[aria-current='page'] {
+  background: #fff;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--th-purple);
+}
+.navItemDisabled {
+  composes: navItem;
+  color: #6b6b80;
+}
+.navTag {
+  font-size: 12px;
+  color: #5d5d72;
+}
+
+.main {
+  padding: var(--th-space-5) var(--th-space-4);
+  max-width: 960px;
+}
+
+.footer {
+  border-top: 1px solid var(--th-border);
+  padding: var(--th-space-3) var(--th-space-4);
+  font-size: 12px;
+  color: #5d5d72;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .nav {
+    border-right: none;
+    border-bottom: 1px solid var(--th-border);
+  }
+  .nav ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .main {
+    padding: var(--th-space-4) var(--th-space-3);
+  }
+}

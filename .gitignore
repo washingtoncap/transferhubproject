@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local environment files never leave a developer machine.
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log

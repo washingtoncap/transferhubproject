@@ -1,0 +1,40 @@
+.lead {
+  font-size: 18px;
+  max-width: 62ch;
+  margin: 0 0 var(--th-space-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--th-space-3);
+  margin-bottom: var(--th-space-5);
+}
+
+.card {
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-card);
+  padding: var(--th-space-4);
+  background: #fff;
+}
+.card p {
+  margin: 0;
+}
+
+.panel {
+  background: var(--th-lavender);
+  border-radius: var(--th-radius-card);
+  padding: var(--th-space-4);
+}
+.panel ol {
+  margin: var(--th-space-2) 0 0;
+  padding-left: 1.25rem;
+}
+.panel li {
+  margin-bottom: var(--th-space-1);
+}
+
+.done {
+  color: var(--th-success);
+  font-weight: 600;
+}

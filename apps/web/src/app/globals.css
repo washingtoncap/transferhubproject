@@ -1,0 +1,100 @@
+/*
+ * Transparent Transfers / TransferHub tokens (TH-BRD §3–4).
+ * Values are the proposed implementation tokens derived from the supplied references; confirm
+ * against original vector masters before public release.
+ */
+:root {
+  --th-navy: #11112f;
+  --th-purple: #5530a4;
+  --th-magenta: #e60072;
+  --th-lavender: #f4f0fa;
+  --th-border: #ded6ea;
+  --th-body: #343447;
+  --th-success: #176b46;
+  --th-warning: #8a5700;
+  --th-error: #b42336;
+  --th-surface: #ffffff;
+  --th-accent-rule: linear-gradient(90deg, var(--th-magenta), var(--th-purple));
+
+  --th-space-1: 4px;
+  --th-space-2: 8px;
+  --th-space-3: 16px;
+  --th-space-4: 24px;
+  --th-space-5: 32px;
+  --th-radius-card: 12px;
+
+  --th-font:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--th-surface);
+  color: var(--th-body);
+  font-family: var(--th-font);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--th-navy);
+  line-height: 1.25;
+  margin: 0 0 var(--th-space-2);
+}
+h1 {
+  font-size: 32px;
+}
+h2 {
+  font-size: 24px;
+}
+h3 {
+  font-size: 18px;
+}
+
+a {
+  color: var(--th-purple);
+}
+
+/* Visible keyboard focus everywhere (WCAG 2.2 AA, TH-BRD §8). */
+:focus-visible {
+  outline: 3px solid var(--th-purple);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+.skip-link:focus {
+  left: var(--th-space-3);
+  top: var(--th-space-3);
+  background: var(--th-navy);
+  color: #fff;
+  padding: var(--th-space-2) var(--th-space-3);
+  z-index: 10;
+}
+
+/* Balances, rates and amounts always use tabular numerals. */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

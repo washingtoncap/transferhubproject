@@ -1,0 +1,40 @@
+.ok,
+.bad {
+  font-weight: 600;
+  padding: var(--th-space-3);
+  border-radius: var(--th-radius-card);
+  margin: 0 0 var(--th-space-4);
+}
+.ok {
+  color: var(--th-success);
+  background: #edf7f1;
+  border: 1px solid #b9dfca;
+}
+.bad {
+  color: var(--th-error);
+  background: #fcf0f2;
+  border: 1px solid #f0c2ca;
+}
+
+.table {
+  width: 100%;
+  max-width: 560px;
+  border-collapse: collapse;
+}
+.caption {
+  text-align: left;
+  font-size: 14px;
+  color: #5d5d72;
+  padding-bottom: var(--th-space-2);
+}
+.table th {
+  text-align: left;
+  background: var(--th-lavender);
+  color: var(--th-navy);
+  font-size: 14px;
+}
+.table th,
+.table td {
+  padding: var(--th-space-2) var(--th-space-3);
+  border-bottom: 1px solid var(--th-border);
+}

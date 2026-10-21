@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Format, lint, types, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: th
+          POSTGRES_PASSWORD: th
+          POSTGRES_DB: transferhub_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U th"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgres://th:th@localhost:5432/transferhub_test
+      TEST_DATABASE_URL: postgres://th:th@localhost:5432/transferhub_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (lockfile must match)
+        run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build shared packages
+        run: pnpm build:libs
+
+      - name: Type check
+        run: pnpm typecheck
+
+      - name: Migrations apply cleanly
+        run: pnpm db:migrate
+
+      - name: Tests
+        run: pnpm test
+
+      - name: Build all apps
+        run: pnpm build
+
+      - name: Dependency audit (high and critical)
+        run: pnpm audit --audit-level high
