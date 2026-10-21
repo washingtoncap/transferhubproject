@@ -1,0 +1,2 @@
+export const dynamic='force-dynamic';
+export async function GET(){const base=process.env.API_INTERNAL_URL??'http://127.0.0.1:4000';async function check(path:string){try{const r=await fetch(new URL(path,base),{cache:'no-store',signal:AbortSignal.timeout(3000)});return r.ok;}catch{return false;}}const [api,ready]=await Promise.all([check('/health/live'),check('/health/ready')]);return Response.json({api,ready,checkedAt:new Date().toISOString()},{headers:{'Cache-Control':'no-store'}});}

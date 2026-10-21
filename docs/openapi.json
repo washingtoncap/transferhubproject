@@ -1,0 +1,138 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health/live": {
+      "get": {
+        "operationId": "Health_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Process liveness; no database dependency",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "Health_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Database/schema and recent-worker readiness",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/platform": {
+      "get": {
+        "operationId": "Health_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public sandbox capability declaration",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/diagnostics/jobs": {
+      "post": {
+        "operationId": "Diagnostics_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "message"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Job ID and current status"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Enqueue harmless diagnostic; not a financial endpoint",
+        "tags": [
+          "Diagnostics"
+        ]
+      }
+    },
+    "/v1/diagnostics/jobs/{id}": {
+      "get": {
+        "operationId": "Diagnostics_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read a diagnostic result; operator-only",
+        "tags": [
+          "Diagnostics"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "TransferHub foundation",
+    "description": "Sandbox infrastructure only. No customers, money movement or financial authorisation implemented.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}
