@@ -1,0 +1,7 @@
+"use client";
+import {useEffect,useState} from 'react';
+type State={api:boolean;ready:boolean;checkedAt:string};
+export function Status(){const [state,setState]=useState<State|null>(null);const [loading,setLoading]=useState(true);
+ async function refresh(){setLoading(true);try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw new Error();setState(await r.json());}catch{setState({api:false,ready:false,checkedAt:new Date().toISOString()});}finally{setLoading(false);}}
+ useEffect(()=>{void refresh();const timer=setInterval(()=>void refresh(),15000);return()=>clearInterval(timer);},[]);
+ return <><div className="health-grid" aria-live="polite">{[['Web application',true,'This workspace is responding.'],['API service',state?.api,'NestJS service liveness.'],['Database & worker',state?.ready,'Schema access and recent worker heartbeat.']].map(([name,ok,detail])=><article className="health-card" key={String(name)}><div className="health-label">{name}<span className={ok?'dot good':'dot waiting'}/></div><h3>{name==='Web application'?'Available':!state?'Checking…':ok?'Connected':'Unavailable'}</h3><p>{detail}</p></article>)}</div><div className="refresh"><span>{state?`Last checked ${new Date(state.checkedAt).toLocaleTimeString()}`:'Connecting to services…'}</span><button onClick={()=>void refresh()} disabled={loading}>{loading?'Checking…':'Refresh status'}</button></div></>;}
