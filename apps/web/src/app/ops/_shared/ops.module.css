@@ -1,0 +1,159 @@
+/* Shared styles for the operations console pages. */
+
+.tileLink {
+  display: block;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-card);
+  padding: var(--th-space-4);
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+.tileLink:hover {
+  border-color: var(--th-purple);
+}
+.tileLink:focus-visible {
+  outline: 3px solid var(--th-purple);
+  outline-offset: 2px;
+}
+.tileAlert {
+  border-color: var(--th-error);
+  border-width: 2px;
+}
+
+.stack {
+  display: grid;
+  gap: var(--th-space-3);
+  margin-bottom: var(--th-space-4);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--th-space-3);
+  align-items: flex-end;
+  margin-bottom: var(--th-space-3);
+}
+.toolbar > * {
+  min-width: 160px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0 var(--th-space-3);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--th-space-2);
+  align-items: center;
+}
+
+.clickRow {
+  cursor: pointer;
+}
+.clickRow:hover td {
+  background: var(--th-lavender);
+}
+
+.rowLink {
+  color: var(--th-purple);
+  font-weight: 600;
+}
+
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  background: var(--th-lavender);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.muted {
+  color: #5d5d72;
+  font-size: 14px;
+}
+
+.small {
+  font-size: 13px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.diffBad {
+  color: var(--th-error);
+  font-weight: 700;
+}
+.ok {
+  color: var(--th-success);
+  font-weight: 700;
+}
+
+.totalsRow td {
+  font-weight: 700;
+  background: var(--th-lavender);
+  border-top: 2px solid var(--th-border);
+}
+
+.textarea {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid #b9aed0;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--th-navy);
+  min-height: 96px;
+  width: 100%;
+  resize: vertical;
+}
+.textarea:focus-visible {
+  border-color: var(--th-purple);
+}
+
+.inlineForm {
+  display: grid;
+  gap: var(--th-space-2);
+  margin-top: var(--th-space-2);
+  padding: var(--th-space-3);
+  border: 1px solid var(--th-border);
+  border-radius: 8px;
+  background: var(--th-lavender);
+  min-width: 240px;
+}
+
+.bigBadge {
+  font-size: 18px;
+  margin-bottom: var(--th-space-3);
+}
+.bigBadge > span {
+  font-size: 16px;
+  padding: 6px 14px;
+}
+
+.equation {
+  margin: var(--th-space-3) 0;
+  padding: var(--th-space-3);
+  background: var(--th-lavender);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: var(--th-space-3);
+}
+
+.section {
+  margin-bottom: var(--th-space-4);
+}
+
+.refreshNote {
+  font-size: 13px;
+  color: #5d5d72;
+}

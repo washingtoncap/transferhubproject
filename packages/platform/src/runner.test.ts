@@ -84,7 +84,8 @@ describe('worker runner', () => {
       got.push(e.id);
     });
     const id = await writeOutbox(pool, { topic, payload: {} });
-    await r.tick();
+    // Other tests leave events in the shared outbox; dispatch in batches until ours is reached.
+    for (let i = 0; i < 50 && !got.includes(id); i++) await r.tick();
     expect(got).toContain(id);
     const { rows } = await pool.query('SELECT status FROM platform.outbox WHERE id = $1', [id]);
     expect(rows[0].status).toBe('dispatched');

@@ -18,6 +18,7 @@ import { withTransaction, type Pool } from '@transferhub/db';
 import { createLogger, recordAudit, runIdempotent, writeOutbox } from '@transferhub/platform';
 import { testDatabaseUrl, testPool, uniq } from '../../../test/db';
 import { createApp } from './app';
+import { Public } from './http/auth.guard';
 import { RequiresIdempotencyKey } from './http/idempotency.guard';
 import type { RequestWithContext } from './http/request-context';
 import { DB_POOL } from './tokens';
@@ -29,6 +30,7 @@ let executions = 0;
  * endpoint in later buckets follows: validate → one transaction holding the idempotency key,
  * the state change, its audit record and its outbox event.
  */
+@Public()
 @Controller('test')
 class TestCommandController {
   constructor(@Inject(DB_POOL) private readonly pool: Pool) {}

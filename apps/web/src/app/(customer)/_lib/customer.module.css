@@ -1,0 +1,276 @@
+.row {
+  display: flex;
+  gap: var(--th-space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.rowEnd {
+  display: flex;
+  gap: var(--th-space-2);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.stack {
+  display: grid;
+  gap: var(--th-space-3);
+  min-width: 0;
+}
+.section {
+  margin-bottom: var(--th-space-4);
+}
+.muted {
+  color: #5d5d72;
+  font-size: 14px;
+}
+.small {
+  font-size: 13px;
+  color: #5d5d72;
+  margin: 0;
+}
+.big {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--th-navy);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.assetLabel {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--th-purple);
+  margin: 0 0 4px;
+}
+
+/* Pending deposits must never look like cleared money (DEP-01). */
+.pending {
+  margin-top: var(--th-space-3);
+  padding: 10px 12px;
+  border: 1px dashed #c9a35b;
+  border-radius: 8px;
+  background: repeating-linear-gradient(-45deg, #fffaf0, #fffaf0 8px, #fff4df 8px, #fff4df 16px);
+  color: var(--th-warning);
+  font-size: 14px;
+}
+.pending strong {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--th-space-2);
+}
+.checklist li {
+  display: flex;
+  gap: var(--th-space-2);
+  align-items: flex-start;
+}
+.checkMark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--th-purple);
+  display: inline-grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--th-purple);
+}
+.checkDone {
+  composes: checkMark;
+  background: var(--th-purple);
+  color: #fff;
+}
+
+.instructions {
+  border: 2px solid var(--th-purple);
+  border-radius: var(--th-radius-card);
+  padding: var(--th-space-4);
+  background: #fff;
+  margin-bottom: var(--th-space-4);
+}
+.reference {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--th-navy);
+  background: var(--th-lavender);
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  overflow-wrap: anywhere;
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
+.quote {
+  border: 2px solid var(--th-purple);
+  border-radius: var(--th-radius-card);
+  padding: var(--th-space-4);
+  background: #fff;
+}
+.quoteExpired {
+  composes: quote;
+  border-color: #d9d9e2;
+  background: #f8f8fa;
+}
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.meter {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--th-lavender);
+  border: 1px solid var(--th-border);
+  overflow: hidden;
+  margin: var(--th-space-2) 0;
+}
+.meterFill {
+  height: 100%;
+  background: var(--th-purple);
+}
+
+.planCurrent {
+  outline: 2px solid var(--th-purple);
+  border-radius: var(--th-radius-card);
+}
+.price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--th-navy);
+  font-variant-numeric: tabular-nums;
+}
+
+.check {
+  display: flex;
+  gap: var(--th-space-2);
+  align-items: flex-start;
+  margin-bottom: var(--th-space-3);
+  font-size: 15px;
+}
+.check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex: none;
+}
+
+.inlineRate {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 180px;
+}
+.inlineRate input {
+  max-width: 110px;
+}
+
+.owners {
+  display: grid;
+  gap: var(--th-space-2);
+  margin-bottom: var(--th-space-3);
+}
+.ownerRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
+  gap: var(--th-space-2);
+  align-items: end;
+}
+@media (max-width: 480px) {
+  .ownerRow {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+  .ownerRow > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--th-space-3);
+}
+.fieldset legend {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--th-navy);
+  margin-bottom: 6px;
+  padding: 0;
+}
+.radioRow {
+  display: flex;
+  gap: var(--th-space-2);
+  flex-wrap: wrap;
+}
+.radio {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #b9aed0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 44px;
+  cursor: pointer;
+  flex: 1 1 200px;
+}
+.radio:has(input:checked) {
+  border-color: var(--th-purple);
+  background: var(--th-lavender);
+  font-weight: 600;
+}
+
+/* Navigation links styled like the kit's secondary button. */
+.actionLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--th-purple);
+  color: var(--th-purple);
+  background: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+}
+.actionLink:hover {
+  background: var(--th-lavender);
+}
+
+.box {
+  background: #fff;
+  border: 1px solid var(--th-border);
+  border-radius: 10px;
+  padding: var(--th-space-3);
+}
+.consent {
+  background: var(--th-lavender);
+  border: 1px solid var(--th-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  white-space: pre-line;
+  font-size: 14px;
+}
+.inlineError {
+  color: var(--th-error);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 4px 0 0;
+}
+.ownerAction {
+  margin-bottom: var(--th-space-3);
+}

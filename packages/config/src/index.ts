@@ -10,8 +10,13 @@ export type AppEnv = (typeof APP_ENVS)[number];
 const intFromString = (fallback: number, min: number, max: number) =>
   z.coerce.number().int().min(min).max(max).default(fallback);
 
+const SANDBOX_PARTNER_SECRET = 'whsec_sandbox_partner_not_for_production';
+
 const baseSchema = z.object({
   APP_ENV: z.enum(APP_ENVS).default('local'),
+  // Shared secret for the fiat partner's webhook signatures. The sandbox default is refused in
+  // production (see assertEnvironmentSeparation).
+  PARTNER_WEBHOOK_SECRET: z.string().min(16).default(SANDBOX_PARTNER_SECRET),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   DATABASE_URL: z
     .string()
@@ -75,6 +80,9 @@ function assertEnvironmentSeparation(config: BaseConfig): void {
     throw new ConfigError([
       `DATABASE_URL appears to reference a production database while APP_ENV=${config.APP_ENV}`,
     ]);
+  }
+  if (config.APP_ENV === 'production' && config.PARTNER_WEBHOOK_SECRET === SANDBOX_PARTNER_SECRET) {
+    throw new ConfigError(['APP_ENV=production requires a real PARTNER_WEBHOOK_SECRET']);
   }
   if (config.APP_ENV === 'production' && /localhost|127\.0\.0\.1|th:th@/.test(url)) {
     throw new ConfigError(['APP_ENV=production cannot use a local/development DATABASE_URL']);

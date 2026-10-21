@@ -1,12 +1,17 @@
 import 'reflect-metadata';
 import { type DynamicModule, type INestApplication, Module } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { APP_GUARD, NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import type { ApiConfig } from '@transferhub/config';
 import type { Pool } from '@transferhub/db';
 import type { Logger } from '@transferhub/platform';
 import { HealthController } from './health/health.controller';
+import { SessionGuard } from './http/auth.guard';
+import { AuthController } from './modules/auth.controller';
+import { CustomerController } from './modules/customer.controller';
+import { OpsController } from './modules/ops.controller';
+import { PublicController } from './modules/public.controller';
 import { ApiExceptionFilter } from './http/errors';
 import { requestContext } from './http/request-context';
 import { API_CONFIG, DB_POOL, LOGGER } from './tokens';
@@ -41,7 +46,8 @@ class AppModule {
     return {
       module: AppModule,
       imports: [CoreModule.register(deps), ...(deps.modules ?? [])],
-      controllers: [HealthController],
+      controllers: [HealthController, AuthController, PublicController, CustomerController, OpsController],
+      providers: [{ provide: APP_GUARD, useClass: SessionGuard }],
     };
   }
 }
@@ -51,6 +57,8 @@ export async function createApp(deps: AppDeps): Promise<INestApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule.register(deps), {
     logger: false,
     bufferLogs: false,
+    // Partner webhook signatures are computed over the exact bytes received.
+    rawBody: true,
   });
 
   app.disable('x-powered-by');

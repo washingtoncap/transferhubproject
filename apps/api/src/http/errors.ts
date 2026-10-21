@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ZodError } from 'zod';
+import { DomainError } from '@transferhub/core';
 import { IdempotencyConflictError, type Logger } from '@transferhub/platform';
 import type { RequestWithContext } from './request-context';
 
@@ -16,6 +17,7 @@ import type { RequestWithContext } from './request-context';
  * provider_status_unknown, permission_denied.
  */
 export type ErrorCode =
+  | DomainError['code']
   | 'validation_failed'
   | 'idempotency_key_required'
   | 'idempotency_key_reused'
@@ -74,6 +76,13 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof ApiError) {
       return send(exception.getStatus(), {
+        code: exception.code,
+        message: exception.message,
+        details: exception.details,
+      });
+    }
+    if (exception instanceof DomainError) {
+      return send(exception.status, {
         code: exception.code,
         message: exception.message,
         details: exception.details,

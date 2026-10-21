@@ -12,6 +12,7 @@ export default defineConfig({
       '@transferhub/config': pkg('config'),
       '@transferhub/db': pkg('db'),
       '@transferhub/platform': pkg('platform'),
+      '@transferhub/core': pkg('core'),
     },
   },
   test: {

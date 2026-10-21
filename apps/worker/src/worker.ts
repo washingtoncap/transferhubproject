@@ -1,5 +1,6 @@
 import type { WorkerConfig } from '@transferhub/config';
 import type { Pool } from '@transferhub/db';
+import { registerCoreJobs } from '@transferhub/core';
 import { type Logger, Runner } from '@transferhub/platform';
 import {
   PURGE_IDEMPOTENCY_JOB,
@@ -29,6 +30,7 @@ export function buildWorker(deps: WorkerDeps): { runner: Runner; schedule: () =>
   });
 
   runner.onJob(PURGE_IDEMPOTENCY_JOB, purgeExpiredIdempotencyKeys(deps.pool));
+  registerCoreJobs(runner, { pool: deps.pool, partnerSecret: deps.config.PARTNER_WEBHOOK_SECRET });
 
   return { runner, schedule: () => scheduleMaintenance(deps.pool) };
 }

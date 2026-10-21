@@ -1,11 +1,13 @@
 import { Controller, Get, HttpCode, Inject } from '@nestjs/common';
 import type { ApiConfig } from '@transferhub/config';
 import { appliedMigrations, loadMigrations, type Pool } from '@transferhub/db';
+import { Public } from '../http/auth.guard';
 import { ApiError } from '../http/errors';
 import { API_CONFIG, DB_POOL } from '../tokens';
 
 const VERSION = process.env.APP_VERSION ?? '0.1.0';
 
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

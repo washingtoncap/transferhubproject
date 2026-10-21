@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "db:migrate": "pnpm --filter @transferhub/db run migrate",
     "db:status": "pnpm --filter @transferhub/db run status",
+    "db:seed": "pnpm --filter @transferhub/core run seed",
     "dev:api": "pnpm --filter @transferhub/api run dev",
     "dev:worker": "pnpm --filter @transferhub/worker run dev",
     "dev:web": "pnpm --filter @transferhub/web run dev",

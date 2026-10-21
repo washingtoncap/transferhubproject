@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@transferhub/config": "workspace:*",
+    "@transferhub/core": "workspace:*",
     "@transferhub/db": "workspace:*",
     "@transferhub/platform": "workspace:*"
   }

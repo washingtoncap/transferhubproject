@@ -36,9 +36,17 @@ describe('configuration', () => {
   });
 
   it('blocks production from running on a local development database', () => {
-    expect(() => loadApiConfig({ APP_ENV: 'production', DATABASE_URL: ok.DATABASE_URL })).toThrow(
+    expect(() =>
+      loadApiConfig({ APP_ENV: 'production', DATABASE_URL: ok.DATABASE_URL, PARTNER_WEBHOOK_SECRET: 'whsec_real_production_value' }),
+    ).toThrow(
       /local\/development/,
     );
+  });
+
+  it('refuses the sandbox partner secret in production', () => {
+    expect(() =>
+      loadApiConfig({ APP_ENV: 'production', DATABASE_URL: 'postgres://u:p@db.internal/th' }),
+    ).toThrow(/PARTNER_WEBHOOK_SECRET/);
   });
 
   it('splits allowed web origins', () => {
