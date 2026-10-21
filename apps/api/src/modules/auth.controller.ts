@@ -39,18 +39,35 @@ export class AuthController {
 
   @Public()
   @Post('auth/register')
-  async register(@Body() body: Record<string, unknown>, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response) {
+  async register(
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const r = await registerCustomer(this.pool, body, { userAgent: req.header('user-agent') });
     setSessionCookie(res, r.session.token, this.secure);
     res.status(201);
-    return { userId: r.userId, entityId: r.entityId, mfaSetup: { secret: r.mfaSecret, otpauthUrl: r.otpauthUrl } };
+    return {
+      userId: r.userId,
+      entityId: r.entityId,
+      mfaSetup: { secret: r.mfaSecret, otpauthUrl: r.otpauthUrl },
+    };
   }
 
   @Public()
   @Post('auth/login')
   @HttpCode(200)
-  async login(@Body() body: { email?: string; password?: string }, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response) {
-    const s = await login(this.pool, String(body.email ?? ''), String(body.password ?? ''), req.header('user-agent'));
+  async login(
+    @Body() body: { email?: string; password?: string },
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const s = await login(
+      this.pool,
+      String(body.email ?? ''),
+      String(body.password ?? ''),
+      req.header('user-agent'),
+    );
     setSessionCookie(res, s.token, this.secure);
     return { mfaRequired: true };
   }
@@ -58,7 +75,11 @@ export class AuthController {
   @AllowPendingMfa()
   @Post('auth/mfa')
   @HttpCode(200)
-  async mfa(@Body() body: { code?: string }, @CurrentUser() user: SessionUser, @Req() req: AuthedRequest) {
+  async mfa(
+    @Body() body: { code?: string },
+    @CurrentUser() user: SessionUser,
+    @Req() req: AuthedRequest,
+  ) {
     await verifySessionMfa(this.pool, user, String(body.code ?? ''));
     const refreshed = await sessionFromToken(this.pool, readCookie(req, SESSION_COOKIE)!);
     return meView(this.pool, refreshed!);
@@ -71,7 +92,11 @@ export class AuthController {
     if (req.user) {
       await revokeSession(this.pool, req.user.sessionId);
       await recordAudit(this.pool, {
-        actorType: req.user.isStaff ? 'staff' : 'customer', actorId: req.user.userId, action: 'session.signed_out', objectType: 'session', objectId: req.user.sessionId,
+        actorType: req.user.isStaff ? 'staff' : 'customer',
+        actorId: req.user.userId,
+        action: 'session.signed_out',
+        objectType: 'session',
+        objectId: req.user.sessionId,
       });
     }
     clearSessionCookie(res, this.secure);

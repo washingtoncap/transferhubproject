@@ -394,6 +394,60 @@ export interface OpsSystem {
   }>;
 }
 
+export type LedgerAccountType = 'customer' | 'provider_cash' | 'fx_principal' | 'platform_revenue';
+
+export interface LedgerAccount {
+  id: string;
+  code: string;
+  name: string;
+  type: LedgerAccountType;
+  asset: Asset;
+  normalSide: 'debit' | 'credit';
+  entity: { id: string; legalName: string } | null;
+  debitsMinor: number;
+  creditsMinor: number;
+  balanceMinor: number;
+  heldMinor: number;
+  postings: number;
+}
+
+export interface JournalLine {
+  postingId: number;
+  account: { id: string; code: string; name: string };
+  asset: Asset;
+  debitMinor: number;
+  creditMinor: number;
+  lineType: string;
+}
+
+export interface Journal {
+  id: string;
+  kind: string;
+  memo: string;
+  sourceType: string;
+  sourceId: string;
+  createdBy: string;
+  createdAt: string;
+  reversesJournalId: string | null;
+  lines: JournalLine[];
+  totals: Array<{ asset: Asset; debitsMinor: number; creditsMinor: number }>;
+}
+
+export interface AccountLedger {
+  account: LedgerAccount;
+  entries: Array<{
+    postingId: number;
+    journalId: string;
+    at: string;
+    kind: string;
+    memo: string;
+    lineType: string;
+    debitMinor: number;
+    creditMinor: number;
+    balanceAfterMinor: number;
+  }>;
+}
+
 // ---------------------------------------------------------------------------------------------
 // Client
 // ---------------------------------------------------------------------------------------------
@@ -599,5 +653,15 @@ export const api = {
       return request<AuditEntry[]>('GET', `/ops/audit${q.size ? `?${q}` : ''}`);
     },
     system: () => request<OpsSystem>('GET', '/ops/system'),
+    ledgerAccounts: () => request<LedgerAccount[]>('GET', '/ops/ledger/accounts'),
+    ledgerAccount: (id: string) => request<AccountLedger>('GET', `/ops/ledger/accounts/${id}`),
+    journals: (params: { kind?: string; accountId?: string; limit?: number } = {}) => {
+      const q = new URLSearchParams();
+      if (params.kind) q.set('kind', params.kind);
+      if (params.accountId) q.set('accountId', params.accountId);
+      if (params.limit) q.set('limit', String(params.limit));
+      return request<Journal[]>('GET', `/ops/ledger/journals${q.size ? `?${q}` : ''}`);
+    },
+    journal: (id: string) => request<Journal>('GET', `/ops/ledger/journals/${id}`),
   },
 };

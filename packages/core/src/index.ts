@@ -13,3 +13,4 @@ export * from './deposits';
 export * from './withdrawals';
 export * as ops from './ops';
 export * from './jobs';
+export * as ledgerViews from './ledger-views';

@@ -47,7 +47,11 @@ export async function ensureCustomerAccounts(db: Queryable, entityId: string, le
   }
 }
 
-export async function customerAccountId(db: Queryable, entityId: string, asset: Asset): Promise<string> {
+export async function customerAccountId(
+  db: Queryable,
+  entityId: string,
+  asset: Asset,
+): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
     `SELECT id FROM ledger.accounts WHERE entity_id = $1 AND asset = $2 AND type = 'customer'`,
     [entityId, asset],
@@ -76,9 +80,10 @@ export async function systemAccountId(
  */
 export async function lockAccounts(db: Queryable, accountIds: string[]): Promise<void> {
   const ids = [...new Set(accountIds)].sort();
-  await db.query('SELECT id FROM ledger.accounts WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE', [
-    ids,
-  ]);
+  await db.query(
+    'SELECT id FROM ledger.accounts WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE',
+    [ids],
+  );
 }
 
 export interface AccountBalance {
@@ -110,7 +115,9 @@ export async function requireAvailable(
   accountId: string,
   asset: Asset,
   amountMinor: number,
-  code: 'insufficient_available_funds' | 'principal_inventory_insufficient' = 'insufficient_available_funds',
+  code:
+    | 'insufficient_available_funds'
+    | 'principal_inventory_insufficient' = 'insufficient_available_funds',
 ): Promise<AccountBalance> {
   const bal = await accountBalance(db, accountId);
   if (bal.availableMinor < amountMinor) {
@@ -162,7 +169,13 @@ export async function postJournal(db: Queryable, input: JournalInput): Promise<s
 
 export async function createHold(
   db: Queryable,
-  input: { accountId: string; amountMinor: number; reason: string; sourceType: string; sourceId: string },
+  input: {
+    accountId: string;
+    amountMinor: number;
+    reason: string;
+    sourceType: string;
+    sourceId: string;
+  },
 ): Promise<string> {
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO ledger.holds (account_id, amount_minor, reason, source_type, source_id)

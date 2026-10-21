@@ -36,21 +36,35 @@ export function cleanProfile(raw: unknown): Profile {
   const p: Profile = {};
   for (const k of PROFILE_STRING_FIELDS) {
     if (r[k] !== undefined && r[k] !== null && r[k] !== '') {
-      if (typeof r[k] !== 'string' || (r[k] as string).length > 500) throw invalid(`${k} is not valid.`);
+      if (typeof r[k] !== 'string' || (r[k] as string).length > 500)
+        throw invalid(`${k} is not valid.`);
       p[k] = (r[k] as string).trim();
     }
   }
-  if (r.expectedMonthlyUsd !== undefined && r.expectedMonthlyUsd !== null && r.expectedMonthlyUsd !== '') {
+  if (
+    r.expectedMonthlyUsd !== undefined &&
+    r.expectedMonthlyUsd !== null &&
+    r.expectedMonthlyUsd !== ''
+  ) {
     const n = Number(r.expectedMonthlyUsd);
-    if (!Number.isFinite(n) || n < 0 || n > 1e9) throw invalid('Expected monthly USD is not valid.');
+    if (!Number.isFinite(n) || n < 0 || n > 1e9)
+      throw invalid('Expected monthly USD is not valid.');
     p.expectedMonthlyUsd = Math.round(n);
   }
   if (Array.isArray(r.beneficialOwners)) {
     p.beneficialOwners = r.beneficialOwners.slice(0, 20).map((o: unknown) => {
       const x = o as Record<string, unknown>;
       const pct = Number(x.ownershipPercent);
-      if (typeof x.name !== 'string' || !x.name.trim() || !Number.isFinite(pct) || pct < 0 || pct > 100) {
-        throw invalid('Each beneficial owner needs a name and an ownership percentage from 0 to 100.');
+      if (
+        typeof x.name !== 'string' ||
+        !x.name.trim() ||
+        !Number.isFinite(pct) ||
+        pct < 0 ||
+        pct > 100
+      ) {
+        throw invalid(
+          'Each beneficial owner needs a name and an ownership percentage from 0 to 100.',
+        );
       }
       return { name: x.name.trim(), ownershipPercent: pct };
     });
@@ -61,8 +75,13 @@ export function cleanProfile(raw: unknown): Profile {
 /** Fields required before a customer can submit for verification (KYC-01 / KYB-01). */
 export function missingProfileFields(kind: 'individual' | 'business', p: Profile): string[] {
   const common = ['address', 'purpose', 'expectedMonthlyUsd', 'sourceOfFunds'] as const;
-  const specific = kind === 'individual' ? (['dateOfBirth', 'occupation'] as const) : (['registrationNumber', 'businessActivity'] as const);
-  const missing: string[] = [...common, ...specific].filter((k) => p[k] === undefined || p[k] === '');
+  const specific =
+    kind === 'individual'
+      ? (['dateOfBirth', 'occupation'] as const)
+      : (['registrationNumber', 'businessActivity'] as const);
+  const missing: string[] = [...common, ...specific].filter(
+    (k) => p[k] === undefined || p[k] === '',
+  );
   if (kind === 'business') {
     const owners = p.beneficialOwners ?? [];
     // KYB-02: an incomplete ownership graph prevents activation. Provisional 25% threshold.
@@ -75,8 +94,17 @@ export function missingProfileFields(kind: 'individual' | 'business', p: Profile
 
 export async function entityDetail(db: Queryable, entityId: string) {
   const { rows } = await db.query<{
-    id: string; kind: string; customer_role: string; legal_name: string; reference_code: string; onboarding_status: string;
-    profile: Profile; risk_rating: string | null; review_reason: string | null; created_at: Date; approved_at: Date | null;
+    id: string;
+    kind: string;
+    customer_role: string;
+    legal_name: string;
+    reference_code: string;
+    onboarding_status: string;
+    profile: Profile;
+    risk_rating: string | null;
+    review_reason: string | null;
+    created_at: Date;
+    approved_at: Date | null;
   }>(
     `SELECT id, kind, customer_role, legal_name, reference_code, onboarding_status, profile, risk_rating,
             review_reason, created_at, approved_at FROM app.entities WHERE id = $1`,
@@ -85,7 +113,11 @@ export async function entityDetail(db: Queryable, entityId: string) {
   const e = rows[0];
   if (!e) throw new DomainError('not_found', 'Account not found.', 404);
   const sub = await currentSubscription(db, entityId);
-  const parent = await db.query<{ parent_entity_id: string; legal_name: string; child_rate_e4: number }>(
+  const parent = await db.query<{
+    parent_entity_id: string;
+    legal_name: string;
+    child_rate_e4: number;
+  }>(
     `SELECT l.parent_entity_id, p.legal_name, l.child_rate_e4
        FROM app.seller_links l JOIN app.entities p ON p.id = l.parent_entity_id
       WHERE l.child_entity_id = $1 AND l.status = 'active'`,
@@ -106,13 +138,20 @@ export async function entityDetail(db: Queryable, entityId: string) {
     approvedAt: e.approved_at?.toISOString() ?? null,
     subscription: sub?.subscription ?? null,
     plan: sub?.plan ?? null,
-    parent: pr ? { entityId: pr.parent_entity_id, legalName: pr.legal_name, childRateE4: pr.child_rate_e4 } : null,
+    parent: pr
+      ? { entityId: pr.parent_entity_id, legalName: pr.legal_name, childRateE4: pr.child_rate_e4 }
+      : null,
   };
 }
 
 export async function currentSubscription(db: Queryable, entityId: string) {
   const { rows } = await db.query<{
-    id: string; plan_code: string; billing_interval: string; status: string; current_period_start: Date; current_period_end: Date;
+    id: string;
+    plan_code: string;
+    billing_interval: string;
+    status: string;
+    current_period_start: Date;
+    current_period_end: Date;
   }>(
     `SELECT id, plan_code, billing_interval, status, current_period_start, current_period_end
        FROM app.subscriptions WHERE entity_id = $1 AND status IN ('active', 'cancel_at_period_end')`,
@@ -139,11 +178,23 @@ export async function updateProfile(pool: Pool, user: SessionUser, entityId: str
   await withTransaction(pool, async (tx) => {
     const e = await loadEntity(tx, entityId, true);
     if (!['draft', 'needs_information'].includes(e.onboarding_status)) {
-      throw new DomainError('invalid_state', 'Your details are locked while verification is in progress.', 409);
+      throw new DomainError(
+        'invalid_state',
+        'Your details are locked while verification is in progress.',
+        409,
+      );
     }
-    await tx.query('UPDATE app.entities SET profile = $2 WHERE id = $1', [entityId, JSON.stringify(profile)]);
+    await tx.query('UPDATE app.entities SET profile = $2 WHERE id = $1', [
+      entityId,
+      JSON.stringify(profile),
+    ]);
     await recordAudit(tx, {
-      actorType: 'customer', actorId: user.userId, entityId, action: 'entity.profile_updated', objectType: 'entity', objectId: entityId,
+      actorType: 'customer',
+      actorId: user.userId,
+      entityId,
+      action: 'entity.profile_updated',
+      objectType: 'entity',
+      objectId: entityId,
     });
   });
   return entityDetail(pool, entityId);
@@ -160,10 +211,16 @@ export async function submitOnboarding(pool: Pool, user: SessionUser, entityId: 
     if (!['draft', 'needs_information'].includes(e.onboarding_status)) {
       throw new DomainError('invalid_state', 'This application has already been submitted.', 409);
     }
-    const { rows } = await tx.query<{ profile: Profile }>('SELECT profile FROM app.entities WHERE id = $1', [entityId]);
+    const { rows } = await tx.query<{ profile: Profile }>(
+      'SELECT profile FROM app.entities WHERE id = $1',
+      [entityId],
+    );
     const missing = missingProfileFields(e.kind, rows[0]!.profile);
     if (missing.length) {
-      throw invalid('Complete your profile before submitting.', missing.map((m) => ({ path: m, message: 'Required' })));
+      throw invalid(
+        'Complete your profile before submitting.',
+        missing.map((m) => ({ path: m, message: 'Required' })),
+      );
     }
     const screening = /match/i.test(e.legal_name) ? 'possible_match' : 'clear';
     await tx.query(
@@ -172,8 +229,14 @@ export async function submitOnboarding(pool: Pool, user: SessionUser, entityId: 
       [entityId, screening],
     );
     await recordAudit(tx, {
-      actorType: 'customer', actorId: user.userId, entityId, action: 'entity.submitted', objectType: 'entity', objectId: entityId,
-      before: { status: e.onboarding_status }, after: { status: 'compliance_review', screening },
+      actorType: 'customer',
+      actorId: user.userId,
+      entityId,
+      action: 'entity.submitted',
+      objectType: 'entity',
+      objectId: entityId,
+      before: { status: e.onboarding_status },
+      after: { status: 'compliance_review', screening },
     });
   });
   return entityDetail(pool, entityId);
@@ -207,9 +270,22 @@ export interface ActivityLine {
 }
 
 /** Customer statement lines with running balance, newest first (REP-01). */
-export async function activity(db: Queryable, entityId: string, limit = 50, asset?: Asset): Promise<ActivityLine[]> {
+export async function activity(
+  db: Queryable,
+  entityId: string,
+  limit = 50,
+  asset?: Asset,
+): Promise<ActivityLine[]> {
   const { rows } = await db.query<{
-    id: string; journal_id: string; created_at: Date; kind: string; line_type: string; memo: string; asset: Asset; amount: string; running: string;
+    id: string;
+    journal_id: string;
+    created_at: Date;
+    kind: string;
+    line_type: string;
+    memo: string;
+    asset: Asset;
+    amount: string;
+    running: string;
   }>(
     `SELECT * FROM (
        SELECT p.id, p.journal_id, j.created_at, j.kind, p.line_type,
@@ -248,7 +324,15 @@ export async function statementCsv(db: Queryable, entityId: string, asset: Asset
   const fmt = (m: number) => (m / 100).toFixed(2);
   const header = 'date_utc,description,type,currency,amount,balance_after,journal_id';
   const body = lines.map((l) =>
-    [l.at, esc(l.memo), l.lineType, l.asset, fmt(l.amountMinor), fmt(l.balanceAfterMinor), l.journalId].join(','),
+    [
+      l.at,
+      esc(l.memo),
+      l.lineType,
+      l.asset,
+      fmt(l.amountMinor),
+      fmt(l.balanceAfterMinor),
+      l.journalId,
+    ].join(','),
   );
   return [header, ...body].join('\n') + '\n';
 }

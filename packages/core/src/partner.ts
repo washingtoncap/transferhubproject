@@ -1,7 +1,13 @@
 import { createHmac, randomUUID } from 'node:crypto';
 import type { Pool } from '@transferhub/db';
 import { withTransaction } from '@transferhub/db';
-import { enqueueJob, type Queryable, recordAudit, recordInbound, verifyHmacSignature } from '@transferhub/platform';
+import {
+  enqueueJob,
+  type Queryable,
+  recordAudit,
+  recordInbound,
+  verifyHmacSignature,
+} from '@transferhub/platform';
 import { DomainError, invalid } from './errors';
 import { type Asset, isAsset, toNumber } from './money';
 
@@ -34,7 +40,10 @@ export async function ingestPartnerWebhook(
   params: { secret: string; rawBody: string; timestamp: string; signature: string },
 ): Promise<{ outcome: 'accepted' | 'duplicate' | 'conflict' | 'rejected'; inboxId: string }> {
   const valid = verifyHmacSignature({
-    secret: params.secret, rawBody: params.rawBody, timestamp: params.timestamp, signatureHex: params.signature,
+    secret: params.secret,
+    rawBody: params.rawBody,
+    timestamp: params.timestamp,
+    signatureHex: params.signature,
   });
   let event: PartnerEvent;
   try {
@@ -42,18 +51,32 @@ export async function ingestPartnerWebhook(
   } catch {
     throw invalid('Webhook body is not JSON.');
   }
-  if (!event || typeof event.eventId !== 'string' || typeof event.type !== 'string') throw invalid('Webhook body is missing eventId or type.');
+  if (!event || typeof event.eventId !== 'string' || typeof event.type !== 'string')
+    throw invalid('Webhook body is missing eventId or type.');
 
   return withTransaction(pool, async (tx) => {
     const r = await recordInbound(tx, {
-      source: PARTNER_SOURCE, externalEventId: event.eventId, eventType: event.type, payload: event as unknown as Record<string, unknown>, signatureValid: valid,
+      source: PARTNER_SOURCE,
+      externalEventId: event.eventId,
+      eventType: event.type,
+      payload: event as unknown as Record<string, unknown>,
+      signatureValid: valid,
     });
     if (r.kind === 'accepted') {
-      await enqueueJob(tx, { type: 'partner.process_event', payload: { inboxId: r.id }, dedupeKey: `partner_event:${r.id}`, priority: 10 });
+      await enqueueJob(tx, {
+        type: 'partner.process_event',
+        payload: { inboxId: r.id },
+        dedupeKey: `partner_event:${r.id}`,
+        priority: 10,
+      });
     }
     if (r.kind === 'conflict' || r.kind === 'rejected') {
       await recordAudit(tx, {
-        actorType: 'service', actorId: 'partner-webhook', action: `partner.event_${r.kind}`, objectType: 'inbox_event', objectId: r.id,
+        actorType: 'service',
+        actorId: 'partner-webhook',
+        action: `partner.event_${r.kind}`,
+        objectType: 'inbox_event',
+        objectId: r.id,
         metadata: { eventId: event.eventId, type: event.type },
       });
     }
@@ -67,7 +90,12 @@ export async function ingestPartnerWebhook(
 async function deliver(pool: Pool, secret: string, event: PartnerEvent) {
   const rawBody = JSON.stringify(event);
   const timestamp = String(Math.floor(Date.now() / 1000));
-  return ingestPartnerWebhook(pool, { secret, rawBody, timestamp, signature: signPartnerBody(secret, timestamp, rawBody) });
+  return ingestPartnerWebhook(pool, {
+    secret,
+    rawBody,
+    timestamp,
+    signature: signPartnerBody(secret, timestamp, rawBody),
+  });
 }
 
 /**
@@ -82,8 +110,11 @@ export async function simulateBankCredit(
 ) {
   if (!isAsset(raw.asset)) throw invalid('Choose USD or TTD.');
   const amount = Number(raw.amountMinor);
-  if (!Number.isSafeInteger(amount) || amount <= 0) throw invalid('Enter an amount greater than zero.');
-  const reference = String(raw.reference ?? '').trim().toUpperCase();
+  if (!Number.isSafeInteger(amount) || amount <= 0)
+    throw invalid('Enter an amount greater than zero.');
+  const reference = String(raw.reference ?? '')
+    .trim()
+    .toUpperCase();
   const sender = String(raw.senderName ?? '').trim() || 'Unknown sender';
 
   const existing = await pool.query<{ external_event_id: string; occurred_at: Date }>(
@@ -106,7 +137,14 @@ export async function simulateBankCredit(
   const r = await deliver(pool, secret, {
     eventId,
     type: 'statement.credit',
-    data: { statementLineId: eventId, asset: raw.asset, amountMinor: amount, reference, senderName: sender, occurredAt: occurredAt!.toISOString() },
+    data: {
+      statementLineId: eventId,
+      asset: raw.asset,
+      amountMinor: amount,
+      reference,
+      senderName: sender,
+      occurredAt: occurredAt!.toISOString(),
+    },
   });
   return { eventId, outcome: existing.rows[0] ? `redelivered: ${r.outcome}` : r.outcome };
 }
@@ -125,8 +163,15 @@ export class PartnerTimeoutError extends Error {
  *    first time (timeout) — exercising the status-unknown path (FX-03 / WDR-02).
  *  - amount ending in .99: the beneficiary bank later returns the payment.
  */
-export async function partnerSubmitPayout(pool: Pool, input: { clientReference: string; asset: Asset; amountMinor: number }) {
-  const { rows } = await pool.query<{ partner_reference: string; status: string; created: boolean }>(
+export async function partnerSubmitPayout(
+  pool: Pool,
+  input: { clientReference: string; asset: Asset; amountMinor: number },
+) {
+  const { rows } = await pool.query<{
+    partner_reference: string;
+    status: string;
+    created: boolean;
+  }>(
     `WITH ins AS (
        INSERT INTO sandbox.partner_payouts (partner_reference, client_reference, asset, amount_minor, status)
        VALUES ($1, $2, $3, $4, 'accepted') ON CONFLICT (client_reference) DO NOTHING
@@ -135,13 +180,20 @@ export async function partnerSubmitPayout(pool: Pool, input: { clientReference: 
      UNION ALL
      SELECT partner_reference, status, false FROM sandbox.partner_payouts WHERE client_reference = $2
      LIMIT 1`,
-    [`PP-${randomUUID().slice(0, 8).toUpperCase()}`, input.clientReference, input.asset, input.amountMinor],
+    [
+      `PP-${randomUUID().slice(0, 8).toUpperCase()}`,
+      input.clientReference,
+      input.asset,
+      input.amountMinor,
+    ],
   );
   const p = rows[0]!;
   if (p.created) {
     await enqueueJob(pool, {
-      type: 'sandbox.partner_complete_payout', payload: { partnerReference: p.partner_reference },
-      dedupeKey: `sandbox_complete:${p.partner_reference}`, runAt: new Date(Date.now() + 4000),
+      type: 'sandbox.partner_complete_payout',
+      payload: { partnerReference: p.partner_reference },
+      dedupeKey: `sandbox_complete:${p.partner_reference}`,
+      runAt: new Date(Date.now() + 4000),
     });
     if (input.amountMinor % 100 === 77) throw new PartnerTimeoutError();
   }
@@ -158,7 +210,12 @@ export async function partnerQueryPayout(db: Queryable, clientReference: string)
 
 /** Sandbox job: the partner finishes a payout and tells us via webhook. */
 export async function partnerCompletePayout(pool: Pool, secret: string, partnerReference: string) {
-  const { rows } = await pool.query<{ client_reference: string; asset: Asset; amount_minor: string; status: string }>(
+  const { rows } = await pool.query<{
+    client_reference: string;
+    asset: Asset;
+    amount_minor: string;
+    status: string;
+  }>(
     'SELECT client_reference, asset, amount_minor, status FROM sandbox.partner_payouts WHERE partner_reference = $1',
     [partnerReference],
   );
@@ -166,30 +223,57 @@ export async function partnerCompletePayout(pool: Pool, secret: string, partnerR
   if (!p || p.status !== 'accepted') return;
   const amount = toNumber(p.amount_minor);
   if (amount % 100 === 99) {
-    await pool.query(`UPDATE sandbox.partner_payouts SET status = 'returned', completed_at = now() WHERE partner_reference = $1`, [partnerReference]);
+    await pool.query(
+      `UPDATE sandbox.partner_payouts SET status = 'returned', completed_at = now() WHERE partner_reference = $1`,
+      [partnerReference],
+    );
     await deliver(pool, secret, {
       eventId: `payout_returned_${partnerReference}`,
       type: 'payout.returned',
-      data: { partnerReference, clientReference: p.client_reference, reason: 'Returned by beneficiary bank: account closed' },
+      data: {
+        partnerReference,
+        clientReference: p.client_reference,
+        reason: 'Returned by beneficiary bank: account closed',
+      },
     });
     return;
   }
   const statementLineId = `stmt_${randomUUID()}`;
   await withTransaction(pool, async (tx) => {
-    await tx.query(`UPDATE sandbox.partner_payouts SET status = 'paid', completed_at = now() WHERE partner_reference = $1`, [partnerReference]);
+    await tx.query(
+      `UPDATE sandbox.partner_payouts SET status = 'paid', completed_at = now() WHERE partner_reference = $1`,
+      [partnerReference],
+    );
     await tx.query(
       `INSERT INTO sandbox.partner_statement (asset, amount_minor, description, reference, external_event_id)
        VALUES ($1, $2, $3, $4, $5)`,
-      [p.asset, -amount, `Outgoing payout ${partnerReference}`, p.client_reference, statementLineId],
+      [
+        p.asset,
+        -amount,
+        `Outgoing payout ${partnerReference}`,
+        p.client_reference,
+        statementLineId,
+      ],
     );
   });
   await deliver(pool, secret, {
     eventId: `payout_paid_${partnerReference}`,
     type: 'payout.paid',
-    data: { partnerReference, clientReference: p.client_reference, statementLineId, asset: p.asset, amountMinor: amount },
+    data: {
+      partnerReference,
+      clientReference: p.client_reference,
+      statementLineId,
+      asset: p.asset,
+      amountMinor: amount,
+    },
   });
 }
 
 export function requireSandbox(appEnv: string): void {
-  if (appEnv === 'production') throw new DomainError('permission_denied', 'The partner simulator is not available in production.', 403);
+  if (appEnv === 'production')
+    throw new DomainError(
+      'permission_denied',
+      'The partner simulator is not available in production.',
+      403,
+    );
 }

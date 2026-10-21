@@ -46,7 +46,13 @@ class AppModule {
     return {
       module: AppModule,
       imports: [CoreModule.register(deps), ...(deps.modules ?? [])],
-      controllers: [HealthController, AuthController, PublicController, CustomerController, OpsController],
+      controllers: [
+        HealthController,
+        AuthController,
+        PublicController,
+        CustomerController,
+        OpsController,
+      ],
       providers: [{ provide: APP_GUARD, useClass: SessionGuard }],
     };
   }

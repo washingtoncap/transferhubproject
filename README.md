@@ -4,8 +4,15 @@ Customer experience, workflow, ledger and reconciliation platform for partner-op
 services. Proprietary software of Transparent Transfers Technology. Not licensed for use outside
 the company.
 
-> **Status: Bucket 1 — platform foundation.** No customer accounts, balances or money movement
-> exist yet. Every environment other than production shows a "no real money" banner.
+> **Status: working sandbox prototype of the fiat pilot.** Sign-in with MFA, individual and
+> business onboarding with compliance review, double-entry ledger, deposits cleared from signed
+> partner webhooks, USD/TTD exchange, seller network with parent margins, withdrawals with
+> maker/checker, subscriptions, statements, finance dashboard, ledger explorer and daily
+> reconciliation. The fiat partner, KYC vendor and bank are **simulated**; no real money moves.
+> Every environment other than production shows a "no real money" banner.
+>
+> **Try it:** see [`docs/TESTING-GUIDE.md`](docs/TESTING-GUIDE.md) for every sign-in and a
+> ten-minute tour. Password for all demo accounts: `Sandbox!2026`.
 
 ## What is in this repository
 
@@ -34,9 +41,13 @@ createdb -O th transferhub_test
 pnpm install
 cp .env.example .env          # local values only; never commit .env
 
-# 3. Build shared packages and migrate
+# 3. Build shared packages, migrate and load demo data
 pnpm build:libs
 pnpm db:migrate
+pnpm db:seed
+
+# Or do everything (build, migrate, seed, start all three) in one step:
+scripts/sandbox.sh start
 
 # 4. Start each app in its own terminal
 pnpm dev:api                  # http://localhost:4000/health/ready
@@ -71,7 +82,8 @@ These are in the database or the shared libraries, not left to convention:
 - **Logs never contain passwords, codes, tokens or card numbers.**
 - **A non-production process refuses to start against a production database.**
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the pieces fit and
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the pieces fit,
+[`docs/DATABASE.md`](docs/DATABASE.md) for the schema and ledger, and
 [`docs/TRACEABILITY.md`](docs/TRACEABILITY.md) for the requirement mapping.
 
 ## Environments

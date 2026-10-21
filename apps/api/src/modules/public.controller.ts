@@ -49,7 +49,10 @@ export class PublicController {
     const signature = req.header('x-partner-signature') ?? '';
     if (!req.rawBody) throw new ApiError(400, 'validation_failed', 'Empty body');
     const r = await ingestPartnerWebhook(this.pool, {
-      secret: this.config.PARTNER_WEBHOOK_SECRET, rawBody: req.rawBody.toString('utf8'), timestamp, signature,
+      secret: this.config.PARTNER_WEBHOOK_SECRET,
+      rawBody: req.rawBody.toString('utf8'),
+      timestamp,
+      signature,
     });
     if (r.outcome === 'rejected') throw new ApiError(401, 'unauthenticated', 'Invalid signature.');
     return { received: true, outcome: r.outcome };

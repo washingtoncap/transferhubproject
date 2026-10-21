@@ -22,7 +22,7 @@ export function useAutoRefresh(fn: () => unknown, ms: number) {
 /** True when the signed-in staff member holds any of the given roles. */
 export function useHasRole(...roles: StaffRole[]): boolean {
   const { me } = useSession();
-  return me.user.staffRoles.some((r) => roles.includes(r));
+  return me.user.staffRoles.some((r) => r === 'admin' || roles.includes(r));
 }
 
 export function sideLabel(side: 'buy_usd' | 'sell_usd'): string {

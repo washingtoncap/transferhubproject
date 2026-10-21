@@ -19,14 +19,16 @@ export async function requireMember(
   entityId: string,
   roles?: MembershipRole[],
 ): Promise<MembershipRole> {
-  if (!/^[0-9a-f-]{36}$/i.test(entityId)) throw new DomainError('not_found', 'Account not found.', 404);
+  if (!/^[0-9a-f-]{36}$/i.test(entityId))
+    throw new DomainError('not_found', 'Account not found.', 404);
   const { rows } = await db.query<{ role: MembershipRole }>(
     'SELECT role FROM app.memberships WHERE user_id = $1 AND entity_id = $2',
     [user.userId, entityId],
   );
   const role = rows[0]?.role;
   if (!role) throw new DomainError('not_found', 'Account not found.', 404);
-  if (roles && !roles.includes(role)) throw denied('Your role on this account does not allow that.');
+  if (roles && !roles.includes(role))
+    throw denied('Your role on this account does not allow that.');
   return role;
 }
 
@@ -39,7 +41,11 @@ export interface EntityRow {
   onboarding_status: string;
 }
 
-export async function loadEntity(db: Queryable, entityId: string, lock = false): Promise<EntityRow> {
+export async function loadEntity(
+  db: Queryable,
+  entityId: string,
+  lock = false,
+): Promise<EntityRow> {
   const { rows } = await db.query<EntityRow>(
     `SELECT id, kind, customer_role, legal_name, reference_code, onboarding_status
        FROM app.entities WHERE id = $1 ${lock ? 'FOR UPDATE' : ''}`,
@@ -72,5 +78,6 @@ export function requireStaff(user: SessionUser, roles?: StaffRole[]): void {
 }
 
 export function requireMfaUser(user: SessionUser): void {
-  if (!user.mfaVerified) throw new DomainError('mfa_required', 'Complete two-step verification first.', 401);
+  if (!user.mfaVerified)
+    throw new DomainError('mfa_required', 'Complete two-step verification first.', 401);
 }

@@ -30,10 +30,16 @@ export async function overview(db: Queryable) {
     kycQueue: toNumber(r.kyc),
     pendingDeposits: toNumber(r.deposits),
     withdrawalsAwaitingApproval: toNumber(r.withdrawals),
-    reconciliationBreaks: recon.assets.filter((a) => a.status === 'break').length + recon.unmatchedStatementLines.length,
+    reconciliationBreaks:
+      recon.assets.filter((a) => a.status === 'break').length +
+      recon.unmatchedStatementLines.length,
     deadJobs: toNumber(r.dead_jobs),
     customers: { total: toNumber(r.customers), approved: toNumber(r.approved) },
-    last24h: { tradesCount: toNumber(r.trades), tradesUsdMinor: toNumber(r.trades_usd), depositsClearedCount: toNumber(r.cleared) },
+    last24h: {
+      tradesCount: toNumber(r.trades),
+      tradesUsdMinor: toNumber(r.trades_usd),
+      depositsClearedCount: toNumber(r.cleared),
+    },
     platformRevenueTtdMinor: toNumber(r.revenue),
   };
 }
@@ -47,14 +53,32 @@ const CUSTOMER_SELECT = `
     FROM app.entities e`;
 
 interface CustRow {
-  id: string; kind: string; customer_role: string; legal_name: string; reference_code: string; onboarding_status: string;
-  created_at: Date; submitted_at: Date | null; risk_rating: string | null; screening_result: string | null;
-  plan_code: string | null; owner_name: string | null; owner_email: string | null;
+  id: string;
+  kind: string;
+  customer_role: string;
+  legal_name: string;
+  reference_code: string;
+  onboarding_status: string;
+  created_at: Date;
+  submitted_at: Date | null;
+  risk_rating: string | null;
+  screening_result: string | null;
+  plan_code: string | null;
+  owner_name: string | null;
+  owner_email: string | null;
 }
 const toCust = (r: CustRow) => ({
-  id: r.id, kind: r.kind, customerRole: r.customer_role, legalName: r.legal_name, referenceCode: r.reference_code,
-  onboardingStatus: r.onboarding_status, createdAt: r.created_at.toISOString(), submittedAt: r.submitted_at?.toISOString() ?? null,
-  riskRating: r.risk_rating, screeningResult: r.screening_result, planCode: r.plan_code,
+  id: r.id,
+  kind: r.kind,
+  customerRole: r.customer_role,
+  legalName: r.legal_name,
+  referenceCode: r.reference_code,
+  onboardingStatus: r.onboarding_status,
+  createdAt: r.created_at.toISOString(),
+  submittedAt: r.submitted_at?.toISOString() ?? null,
+  riskRating: r.risk_rating,
+  screeningResult: r.screening_result,
+  planCode: r.plan_code,
   owner: r.owner_name ? { name: r.owner_name, email: r.owner_email! } : null,
 });
 
@@ -90,19 +114,38 @@ export async function customerDetail(db: Queryable, entityId: string) {
  * Compliance decision on an application (KYC/KYB). A reason is always recorded; approval needs a
  * risk rating. The decision-maker cannot be a member of the customer they are reviewing.
  */
-export async function decideCustomer(pool: Pool, staff: SessionUser, entityId: string, raw: { decision?: unknown; reason?: unknown; riskRating?: unknown }) {
+export async function decideCustomer(
+  pool: Pool,
+  staff: SessionUser,
+  entityId: string,
+  raw: { decision?: unknown; reason?: unknown; riskRating?: unknown },
+) {
   const decision = raw.decision as string;
-  const map: Record<string, string> = { approve: 'approved', reject: 'rejected', needs_information: 'needs_information', restrict: 'restricted' };
+  const map: Record<string, string> = {
+    approve: 'approved',
+    reject: 'rejected',
+    needs_information: 'needs_information',
+    restrict: 'restricted',
+  };
   const next = map[decision];
   if (!next) throw invalid('Choose a decision.');
   const reason = String(raw.reason ?? '').trim();
   if (!reason) throw invalid('A reason is required for every decision.');
   const risk = raw.riskRating as string | undefined;
-  if (decision === 'approve' && !['low', 'medium', 'high'].includes(risk ?? '')) throw invalid('Set a risk rating to approve.');
+  if (decision === 'approve' && !['low', 'medium', 'high'].includes(risk ?? ''))
+    throw invalid('Set a risk rating to approve.');
   await withTransaction(pool, async (tx) => {
     const e = await loadEntity(tx, entityId, true);
-    const member = await tx.query('SELECT 1 FROM app.memberships WHERE user_id = $1 AND entity_id = $2', [staff.userId, entityId]);
-    if (member.rowCount) throw new DomainError('self_approval', 'You cannot review a customer account you belong to.', 403);
+    const member = await tx.query(
+      'SELECT 1 FROM app.memberships WHERE user_id = $1 AND entity_id = $2',
+      [staff.userId, entityId],
+    );
+    if (member.rowCount)
+      throw new DomainError(
+        'self_approval',
+        'You cannot review a customer account you belong to.',
+        403,
+      );
     const allowedFrom: Record<string, string[]> = {
       approved: ['submitted', 'vendor_checks', 'compliance_review'],
       rejected: ['submitted', 'vendor_checks', 'compliance_review', 'needs_information'],
@@ -110,7 +153,11 @@ export async function decideCustomer(pool: Pool, staff: SessionUser, entityId: s
       restricted: ['approved'],
     };
     if (!allowedFrom[next]!.includes(e.onboarding_status)) {
-      throw new DomainError('invalid_state', `A customer in "${e.onboarding_status}" cannot move to "${next}".`, 409);
+      throw new DomainError(
+        'invalid_state',
+        `A customer in "${e.onboarding_status}" cannot move to "${next}".`,
+        409,
+      );
     }
     await tx.query(
       `UPDATE app.entities SET onboarding_status = $2, review_reason = $3, reviewed_by = $4,
@@ -119,35 +166,67 @@ export async function decideCustomer(pool: Pool, staff: SessionUser, entityId: s
       [entityId, next, reason, staff.userId, risk ?? null],
     );
     await recordAudit(tx, {
-      actorType: 'staff', actorId: staff.userId, entityId, action: `entity.${next}`, objectType: 'entity', objectId: entityId, reason,
-      before: { status: e.onboarding_status }, after: { status: next, riskRating: risk ?? null },
+      actorType: 'staff',
+      actorId: staff.userId,
+      entityId,
+      action: `entity.${next}`,
+      objectType: 'entity',
+      objectId: entityId,
+      reason,
+      before: { status: e.onboarding_status },
+      after: { status: next, riskRating: risk ?? null },
     });
   });
   return customerDetail(pool, entityId);
 }
 
 export async function opsDeposits(db: Queryable, status?: string) {
-  const { rows } = await db.query<Parameters<typeof toClaimView>[0] & { entity_id: string; legal_name: string; reference_code: string }>(
+  const { rows } = await db.query<
+    Parameters<typeof toClaimView>[0] & {
+      entity_id: string;
+      legal_name: string;
+      reference_code: string;
+    }
+  >(
     `SELECT c.*, e.legal_name, e.reference_code FROM app.deposit_claims c JOIN app.entities e ON e.id = c.entity_id
       WHERE ($1::text IS NULL OR c.status = $1) ORDER BY c.created_at DESC LIMIT 200`,
     [status ?? null],
   );
-  return rows.map((r) => ({ ...toClaimView(r), entity: { id: r.entity_id, legalName: r.legal_name, referenceCode: r.reference_code } }));
+  return rows.map((r) => ({
+    ...toClaimView(r),
+    entity: { id: r.entity_id, legalName: r.legal_name, referenceCode: r.reference_code },
+  }));
 }
 
 export async function opsTrades(db: Queryable) {
   const { rows } = await db.query<{
-    id: string; entity_id: string; legal_name: string; side: string; usd_minor: string; ttd_minor: string; rate_e4: number;
-    rate_source: string; parent_margin_minor: string; platform_share_minor: string; accepted_at: Date;
+    id: string;
+    entity_id: string;
+    legal_name: string;
+    side: string;
+    usd_minor: string;
+    ttd_minor: string;
+    rate_e4: number;
+    rate_source: string;
+    parent_margin_minor: string;
+    platform_share_minor: string;
+    accepted_at: Date;
   }>(
     `SELECT q.id, q.entity_id, e.legal_name, q.side, q.usd_minor, q.ttd_minor, q.rate_e4, q.rate_source, q.parent_margin_minor,
             q.platform_share_minor, q.accepted_at
        FROM app.quotes q JOIN app.entities e ON e.id = q.entity_id WHERE q.status = 'accepted' ORDER BY q.accepted_at DESC LIMIT 200`,
   );
   return rows.map((r) => ({
-    id: r.id, entity: { id: r.entity_id, legalName: r.legal_name }, side: r.side, usdMinor: toNumber(r.usd_minor), ttdMinor: toNumber(r.ttd_minor),
-    rateE4: r.rate_e4, rateSource: r.rate_source, parentMarginMinor: toNumber(r.parent_margin_minor),
-    platformShareMinor: toNumber(r.platform_share_minor), acceptedAt: r.accepted_at.toISOString(),
+    id: r.id,
+    entity: { id: r.entity_id, legalName: r.legal_name },
+    side: r.side,
+    usdMinor: toNumber(r.usd_minor),
+    ttdMinor: toNumber(r.ttd_minor),
+    rateE4: r.rate_e4,
+    rateSource: r.rate_source,
+    parentMarginMinor: toNumber(r.parent_margin_minor),
+    platformShareMinor: toNumber(r.platform_share_minor),
+    acceptedAt: r.accepted_at.toISOString(),
   }));
 }
 
@@ -165,7 +244,8 @@ export async function reconciliation(db: Queryable) {
   const partner = await db.query<{ asset: Asset; total: string }>(
     'SELECT asset, COALESCE(sum(amount_minor), 0) AS total FROM sandbox.partner_statement GROUP BY asset',
   );
-  const get = (asset: Asset, type: string) => toNumber(sums.rows.find((r) => r.asset === asset && r.type === type)?.total ?? 0);
+  const get = (asset: Asset, type: string) =>
+    toNumber(sums.rows.find((r) => r.asset === asset && r.type === type)?.total ?? 0);
   const assets = ASSETS.map((asset) => {
     const ledgerCash = get(asset, 'provider_cash');
     const partnerBal = toNumber(partner.rows.find((r) => r.asset === asset)?.total ?? 0);
@@ -182,7 +262,14 @@ export async function reconciliation(db: Queryable) {
       status: diff === 0 && tb[asset] === 0 ? ('matched' as const) : ('break' as const),
     };
   });
-  const unmatched = await db.query<{ id: string; asset: Asset; amount_minor: string; description: string; reference: string | null; occurred_at: Date }>(
+  const unmatched = await db.query<{
+    id: string;
+    asset: Asset;
+    amount_minor: string;
+    description: string;
+    reference: string | null;
+    occurred_at: Date;
+  }>(
     `SELECT s.id, s.asset, s.amount_minor, s.description, s.reference, s.occurred_at FROM sandbox.partner_statement s
       WHERE NOT EXISTS (SELECT 1 FROM ledger.journals j WHERE j.source_type = 'partner_statement' AND j.source_id = s.external_event_id)
       ORDER BY s.occurred_at DESC LIMIT 100`,
@@ -194,19 +281,32 @@ export async function reconciliation(db: Queryable) {
     asOf: new Date().toISOString(),
     assets,
     unmatchedStatementLines: unmatched.rows.map((r) => ({
-      id: r.id, asset: r.asset, amountMinor: toNumber(r.amount_minor), description: r.description, reference: r.reference, occurredAt: r.occurred_at.toISOString(),
+      id: r.id,
+      asset: r.asset,
+      amountMinor: toNumber(r.amount_minor),
+      description: r.description,
+      reference: r.reference,
+      occurredAt: r.occurred_at.toISOString(),
     })),
     conflictingEvents: toNumber(conflicts.rows[0]!.n),
   };
 }
 
 /** Treasury changes to the rate policy. Every change is audited with before/after and a reason. */
-export async function updateRatePolicy(pool: Pool, staff: SessionUser, raw: Record<string, unknown>) {
+export async function updateRatePolicy(
+  pool: Pool,
+  staff: SessionUser,
+  raw: Record<string, unknown>,
+) {
   const reason = String(raw.reason ?? '').trim();
   if (!reason) throw invalid('Give a reason for the change.');
   const fields: Record<string, string> = {
-    standardBuyE4: 'standard_buy_e4', standardSellE4: 'standard_sell_e4', childFloorE4: 'child_floor_e4',
-    platformShareE4: 'platform_share_e4', quoteTtlSeconds: 'quote_ttl_seconds', dualApprovalUsdMinor: 'dual_approval_usd_minor',
+    standardBuyE4: 'standard_buy_e4',
+    standardSellE4: 'standard_sell_e4',
+    childFloorE4: 'child_floor_e4',
+    platformShareE4: 'platform_share_e4',
+    quoteTtlSeconds: 'quote_ttl_seconds',
+    dualApprovalUsdMinor: 'dual_approval_usd_minor',
   };
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -222,22 +322,48 @@ export async function updateRatePolicy(pool: Pool, staff: SessionUser, raw: Reco
     const before = await ratePolicy(tx);
     values.push(staff.userId);
     try {
-      await tx.query(`UPDATE app.rate_policy SET ${sets.join(', ')}, updated_by = $${values.length}, updated_at = now()`, values);
+      await tx.query(
+        `UPDATE app.rate_policy SET ${sets.join(', ')}, updated_by = $${values.length}, updated_at = now()`,
+        values,
+      );
     } catch (err) {
-      if (err instanceof Error && /check constraint/.test(err.message)) throw invalid('Those values are outside the allowed range.');
+      if (err instanceof Error && /check constraint/.test(err.message))
+        throw invalid('Those values are outside the allowed range.');
       throw err;
     }
     const after = await ratePolicy(tx);
-    await recordAudit(tx, { actorType: 'staff', actorId: staff.userId, action: 'rate_policy.updated', objectType: 'rate_policy', objectId: 'current', reason, before, after });
+    await recordAudit(tx, {
+      actorType: 'staff',
+      actorId: staff.userId,
+      action: 'rate_policy.updated',
+      objectType: 'rate_policy',
+      objectId: 'current',
+      reason,
+      before,
+      after,
+    });
   });
   return ratePolicy(pool);
 }
 
-export async function audit(db: Queryable, params: { limit?: number; objectType?: string; entityId?: string }) {
+export async function audit(
+  db: Queryable,
+  params: { limit?: number; objectType?: string; entityId?: string },
+) {
   const limit = Math.min(Math.max(Number(params.limit) || 100, 1), 500);
   const { rows } = await db.query<{
-    id: string; occurred_at: Date; actor_type: string; actor_id: string; actor_name: string | null; entity_id: string | null; action: string;
-    object_type: string; object_id: string | null; reason: string | null; approver_id: string | null; request_id: string | null;
+    id: string;
+    occurred_at: Date;
+    actor_type: string;
+    actor_id: string;
+    actor_name: string | null;
+    entity_id: string | null;
+    action: string;
+    object_type: string;
+    object_id: string | null;
+    reason: string | null;
+    approver_id: string | null;
+    request_id: string | null;
   }>(
     `SELECT a.id, a.occurred_at, a.actor_type, a.actor_id, u.full_name AS actor_name, a.entity_id, a.action, a.object_type, a.object_id,
             a.reason, a.approver_id, a.request_id
@@ -248,28 +374,71 @@ export async function audit(db: Queryable, params: { limit?: number; objectType?
     [params.objectType || null, params.entityId || null, limit],
   );
   return rows.map((r) => ({
-    id: String(r.id), occurredAt: r.occurred_at.toISOString(), actorType: r.actor_type, actorId: r.actor_id, actorName: r.actor_name,
-    entityId: r.entity_id, action: r.action, objectType: r.object_type, objectId: r.object_id, reason: r.reason, approverId: r.approver_id,
+    id: String(r.id),
+    occurredAt: r.occurred_at.toISOString(),
+    actorType: r.actor_type,
+    actorId: r.actor_id,
+    actorName: r.actor_name,
+    entityId: r.entity_id,
+    action: r.action,
+    objectType: r.object_type,
+    objectId: r.object_id,
+    reason: r.reason,
+    approverId: r.approver_id,
     requestId: r.request_id,
   }));
 }
 
 export async function system(db: Queryable) {
   const count = async (table: string, statuses: string[]) => {
-    const { rows } = await db.query<{ status: string; n: string }>(`SELECT status, count(*) AS n FROM ${table} GROUP BY status`);
-    return Object.fromEntries(statuses.map((s) => [s, toNumber(rows.find((r) => r.status === s)?.n ?? 0)]));
+    const { rows } = await db.query<{ status: string; n: string }>(
+      `SELECT status, count(*) AS n FROM ${table} GROUP BY status`,
+    );
+    return Object.fromEntries(
+      statuses.map((s) => [s, toNumber(rows.find((r) => r.status === s)?.n ?? 0)]),
+    );
   };
-  const dead = await db.query<{ id: string; type: string; last_error: string | null; attempts: number; updated_at: Date }>(
+  const dead = await db.query<{
+    id: string;
+    type: string;
+    last_error: string | null;
+    attempts: number;
+    updated_at: Date;
+  }>(
     `SELECT id, type, last_error, attempts, updated_at FROM platform.jobs WHERE status = 'dead' ORDER BY updated_at DESC LIMIT 50`,
   );
-  const recent = await db.query<{ id: string; type: string; status: string; attempts: number; updated_at: Date }>(
+  const recent = await db.query<{
+    id: string;
+    type: string;
+    status: string;
+    attempts: number;
+    updated_at: Date;
+  }>(
     `SELECT id, type, status, attempts, updated_at FROM platform.jobs ORDER BY updated_at DESC LIMIT 25`,
   );
   return {
     jobs: await count('platform.jobs', ['queued', 'running', 'succeeded', 'dead']),
     outbox: await count('platform.outbox', ['pending', 'dispatching', 'dispatched', 'dead']),
-    inbox: await count('platform.inbox', ['received', 'processing', 'processed', 'rejected', 'dead']),
-    deadJobs: dead.rows.map((r) => ({ id: r.id, type: r.type, lastError: r.last_error, attempts: r.attempts, updatedAt: r.updated_at.toISOString() })),
-    recentJobs: recent.rows.map((r) => ({ id: r.id, type: r.type, status: r.status, attempts: r.attempts, updatedAt: r.updated_at.toISOString() })),
+    inbox: await count('platform.inbox', [
+      'received',
+      'processing',
+      'processed',
+      'rejected',
+      'dead',
+    ]),
+    deadJobs: dead.rows.map((r) => ({
+      id: r.id,
+      type: r.type,
+      lastError: r.last_error,
+      attempts: r.attempts,
+      updatedAt: r.updated_at.toISOString(),
+    })),
+    recentJobs: recent.rows.map((r) => ({
+      id: r.id,
+      type: r.type,
+      status: r.status,
+      attempts: r.attempts,
+      updatedAt: r.updated_at.toISOString(),
+    })),
   };
 }

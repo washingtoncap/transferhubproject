@@ -1,4 +1,17 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Patch, Post, Put, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import {
   ACTING_ROLES,
@@ -60,7 +73,11 @@ export class CustomerController {
   }
 
   @Put('profile')
-  async profile(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: unknown) {
+  async profile(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: unknown,
+  ) {
     await requireMember(this.pool, u, id, ['owner', 'admin']);
     return updateProfile(this.pool, u, id, body);
   }
@@ -79,18 +96,30 @@ export class CustomerController {
   }
 
   @Get('activity')
-  async activity(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Query('limit') limit?: string) {
+  async activity(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Query('limit') limit?: string,
+  ) {
     await this.view(u, id);
     return activity(this.pool, id, Number(limit) || 50);
   }
 
   @Get('statement.csv')
-  async csv(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Query('asset') asset: string, @Res() res: Response) {
+  async csv(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Query('asset') asset: string,
+    @Res() res: Response,
+  ) {
     await this.view(u, id);
     if (!isAsset(asset)) throw new ApiError(400, 'validation_failed', 'asset must be USD or TTD');
     const body = await statementCsv(this.pool, id, asset);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="transferhub-statement-${asset}.csv"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="transferhub-statement-${asset}.csv"`,
+    );
     res.send(body);
   }
 
@@ -103,7 +132,13 @@ export class CustomerController {
 
   @Post('deposits')
   @RequiresIdempotencyKey()
-  async createDeposit(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response) {
+  async createDeposit(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.act(u, id);
     res.status(201);
     return createDeposit(this.pool, u, id, body, req.idempotencyKey!);
@@ -111,7 +146,12 @@ export class CustomerController {
 
   // Exchange ------------------------------------------------------------------------------------
   @Post('quotes')
-  async quote(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Res({ passthrough: true }) res: Response) {
+  async quote(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.act(u, id);
     res.status(201);
     return createQuote(this.pool, u, id, body);
@@ -120,7 +160,12 @@ export class CustomerController {
   @Post('quotes/:quoteId/accept')
   @RequiresIdempotencyKey()
   @HttpCode(200)
-  async accept(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Param('quoteId') quoteId: string, @Req() req: AuthedRequest) {
+  async accept(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Param('quoteId') quoteId: string,
+    @Req() req: AuthedRequest,
+  ) {
     await this.act(u, id);
     return acceptQuote(this.pool, u, id, quoteId, req.idempotencyKey!);
   }
@@ -139,28 +184,48 @@ export class CustomerController {
   }
 
   @Post('network/invitations')
-  async invite(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Res({ passthrough: true }) res: Response) {
+  async invite(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.act(u, id);
     res.status(201);
     return inviteChild(this.pool, u, id, body);
   }
 
   @Patch('network/:linkId')
-  async setRate(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Param('linkId') linkId: string, @Body() body: { childRateE4?: unknown }) {
+  async setRate(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Param('linkId') linkId: string,
+    @Body() body: { childRateE4?: unknown },
+  ) {
     await this.act(u, id);
     return setChildRate(this.pool, u, id, linkId, body.childRateE4);
   }
 
   @Post('network/:linkId/detach')
   @HttpCode(200)
-  async detach(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Param('linkId') linkId: string) {
+  async detach(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Param('linkId') linkId: string,
+  ) {
     await this.act(u, id);
     return detachChild(this.pool, u, id, linkId);
   }
 
   @Post('allocations')
   @RequiresIdempotencyKey()
-  async allocate(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response) {
+  async allocate(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.act(u, id);
     res.status(201);
     return allocate(this.pool, u, id, body, req.idempotencyKey!);
@@ -174,14 +239,23 @@ export class CustomerController {
 
   @Post('network-invitations/:linkId/accept')
   @HttpCode(200)
-  async acceptInvite(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Param('linkId') linkId: string, @Body() body: { consent?: unknown }) {
+  async acceptInvite(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Param('linkId') linkId: string,
+    @Body() body: { consent?: unknown },
+  ) {
     await requireMember(this.pool, u, id, ['owner', 'admin']);
     return respondToInvitation(this.pool, u, id, linkId, true, body?.consent);
   }
 
   @Post('network-invitations/:linkId/decline')
   @HttpCode(200)
-  async declineInvite(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Param('linkId') linkId: string) {
+  async declineInvite(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Param('linkId') linkId: string,
+  ) {
     await requireMember(this.pool, u, id, ['owner', 'admin']);
     return respondToInvitation(this.pool, u, id, linkId, false, undefined);
   }
@@ -194,7 +268,12 @@ export class CustomerController {
   }
 
   @Post('beneficiaries')
-  async addBeneficiary(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Res({ passthrough: true }) res: Response) {
+  async addBeneficiary(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await requireMember(this.pool, u, id, ['owner', 'admin']);
     res.status(201);
     return addBeneficiary(this.pool, u, id, body);
@@ -208,7 +287,13 @@ export class CustomerController {
 
   @Post('withdrawals')
   @RequiresIdempotencyKey()
-  async withdraw(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response) {
+  async withdraw(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.act(u, id);
     res.status(201);
     return requestWithdrawal(this.pool, u, id, body, req.idempotencyKey!);
@@ -223,7 +308,13 @@ export class CustomerController {
 
   @Post('subscription')
   @RequiresIdempotencyKey()
-  async subscribe(@CurrentUser() u: SessionUser, @Param('entityId') id: string, @Body() body: Record<string, unknown>, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response) {
+  async subscribe(
+    @CurrentUser() u: SessionUser,
+    @Param('entityId') id: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await requireMember(this.pool, u, id, ['owner', 'admin']);
     res.status(201);
     return subscribe(this.pool, u, id, body, req.idempotencyKey!);

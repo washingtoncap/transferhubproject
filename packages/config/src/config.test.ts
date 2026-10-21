@@ -37,10 +37,12 @@ describe('configuration', () => {
 
   it('blocks production from running on a local development database', () => {
     expect(() =>
-      loadApiConfig({ APP_ENV: 'production', DATABASE_URL: ok.DATABASE_URL, PARTNER_WEBHOOK_SECRET: 'whsec_real_production_value' }),
-    ).toThrow(
-      /local\/development/,
-    );
+      loadApiConfig({
+        APP_ENV: 'production',
+        DATABASE_URL: ok.DATABASE_URL,
+        PARTNER_WEBHOOK_SECRET: 'whsec_real_production_value',
+      }),
+    ).toThrow(/local\/development/);
   });
 
   it('refuses the sandbox partner secret in production', () => {

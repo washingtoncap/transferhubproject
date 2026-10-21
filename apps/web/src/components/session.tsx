@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { api, ApiError, type EntitySummary, type Me } from '@/lib/api';
+import { staffLanding } from '@/lib/roles';
 
 interface SessionValue {
   me: Me;
@@ -52,7 +53,7 @@ export function SessionProvider({
         return;
       }
       if (!requireStaff && m.memberships.length === 0 && m.user.isStaff) {
-        router.replace('/ops');
+        router.replace(staffLanding(m.user.staffRoles));
         return;
       }
       setMe(m);

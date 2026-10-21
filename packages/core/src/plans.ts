@@ -15,8 +15,15 @@ export interface PlanView {
 }
 
 interface PlanRow {
-  code: string; audience: 'buyer' | 'seller'; name: string; monthly_minor: string; annual_minor: string;
-  usd_rate_e4: number; volume_allowance_usd_minor: string; child_limit: number; staff_seats: number;
+  code: string;
+  audience: 'buyer' | 'seller';
+  name: string;
+  monthly_minor: string;
+  annual_minor: string;
+  usd_rate_e4: number;
+  volume_allowance_usd_minor: string;
+  child_limit: number;
+  staff_seats: number;
 }
 
 const toView = (r: PlanRow): PlanView => ({
@@ -54,8 +61,13 @@ export interface RatePolicy {
 
 export async function ratePolicy(db: Queryable): Promise<RatePolicy> {
   const { rows } = await db.query<{
-    standard_buy_e4: number; standard_sell_e4: number; child_floor_e4: number; platform_share_e4: number;
-    quote_ttl_seconds: number; dual_approval_usd_minor: string; updated_at: Date;
+    standard_buy_e4: number;
+    standard_sell_e4: number;
+    child_floor_e4: number;
+    platform_share_e4: number;
+    quote_ttl_seconds: number;
+    dual_approval_usd_minor: string;
+    updated_at: Date;
   }>('SELECT * FROM app.rate_policy');
   const r = rows[0]!;
   return {

@@ -30,10 +30,12 @@ export interface AuthedRequest extends Request {
   idempotencyKey?: string;
 }
 
-export const CurrentUser = createParamDecorator((_: unknown, ctx: ExecutionContext): SessionUser => {
-  const req = ctx.switchToHttp().getRequest<AuthedRequest>();
-  return req.user!;
-});
+export const CurrentUser = createParamDecorator(
+  (_: unknown, ctx: ExecutionContext): SessionUser => {
+    const req = ctx.switchToHttp().getRequest<AuthedRequest>();
+    return req.user!;
+  },
+);
 
 export function readCookie(req: Request, name: string): string | null {
   const header = req.headers.cookie;
@@ -53,7 +55,10 @@ export function setSessionCookie(res: Response, token: string, secure: boolean):
 }
 
 export function clearSessionCookie(res: Response, secure: boolean): void {
-  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? '; Secure' : ''}`);
+  res.setHeader(
+    'Set-Cookie',
+    `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? '; Secure' : ''}`,
+  );
 }
 
 /**

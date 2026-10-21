@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useSession } from './session';
+import { canSee, type OpsArea } from '@/lib/roles';
 import styles from '@/app/shell.module.css';
 
 export interface NavItem {
@@ -151,22 +152,40 @@ export function CustomerShell({ children }: { children: ReactNode }) {
 
 export function OpsShell({ children }: { children: ReactNode }) {
   const { me } = useSession();
-  const items: NavItem[] = [
-    { label: 'Overview', href: '/ops' },
-    { label: 'Customers & KYC', href: '/ops/customers' },
-    { label: 'Deposits', href: '/ops/deposits' },
-    { label: 'Withdrawals', href: '/ops/withdrawals' },
-    { label: 'Trades', href: '/ops/trades' },
-    { label: 'Reconciliation', href: '/ops/reconciliation' },
-    { label: 'Rates & policy', href: '/ops/rates' },
-    { label: 'Audit log', href: '/ops/audit' },
-    { label: 'System health', href: '/ops/system' },
+  const path = usePathname();
+  const roles = me.user.staffRoles;
+  const all: Array<NavItem & { area: OpsArea }> = [
+    { label: 'Overview', href: '/ops', area: 'overview' },
+    { label: 'Finance', href: '/ops/finance', area: 'finance' },
+    { label: 'Customers & KYC', href: '/ops/customers', area: 'customers' },
+    { label: 'Deposits', href: '/ops/deposits', area: 'deposits' },
+    { label: 'Withdrawals', href: '/ops/withdrawals', area: 'withdrawals' },
+    { label: 'Trades', href: '/ops/trades', area: 'trades' },
+    { label: 'Ledger', href: '/ops/ledger', area: 'ledger' },
+    { label: 'Reconciliation', href: '/ops/reconciliation', area: 'reconciliation' },
+    { label: 'Rates & policy', href: '/ops/rates', area: 'rates' },
+    { label: 'Audit log', href: '/ops/audit', area: 'audit' },
+    { label: 'System health', href: '/ops/system', area: 'system' },
   ];
+  const items: NavItem[] = all.filter((i) => canSee(roles, i.area));
+  const current = [...all]
+    .sort((a, b) => b.href.length - a.href.length)
+    .find((i) =>
+      i.href === '/ops' ? path === '/ops' : path === i.href || path.startsWith(`${i.href}/`),
+    );
+  const allowed = !current || canSee(roles, current.area);
+  const title = roles.includes('admin')
+    ? 'Admin'
+    : roles.includes('finance') || roles.includes('treasury')
+      ? 'Finance'
+      : roles.includes('compliance')
+        ? 'Compliance'
+        : 'Operations';
   return (
     <>
       <div className={styles.ruleOps} aria-hidden="true" />
       <header className={styles.header}>
-        <Brand suffix="Operations" />
+        <Brand suffix={title} />
         <div className={styles.headerRight}>
           <EnvBadge />
           <span className={styles.roles}>{me.user.staffRoles.join(' · ')}</span>
@@ -176,7 +195,17 @@ export function OpsShell({ children }: { children: ReactNode }) {
       <div className={styles.layout}>
         <Nav items={items} label="Operations" />
         <main id="main" className={styles.main}>
-          {children}
+          {allowed ? (
+            children
+          ) : (
+            <div role="alert">
+              <h1>Not available for your role</h1>
+              <p>
+                This area is limited to other staff roles. Your roles: {roles.join(', ')}. Use the
+                menu to reach the areas you can work in.
+              </p>
+            </div>
+          )}
         </main>
       </div>
     </>

@@ -5,18 +5,23 @@ import { type FormEvent, Suspense, useEffect, useState } from 'react';
 import { Alert, Button, Field, Input } from '@/components/ui';
 import { Brand } from '@/components/shell';
 import { api, ApiError } from '@/lib/api';
+import { staffLanding } from '@/lib/roles';
 import styles from './login.module.css';
 
 /** Demo accounts created by the seed script (sandbox only). */
 const DEMO_ACCOUNTS: Array<{ email: string; who: string }> = [
-  { email: 'marcus@islandremit.tt', who: 'Main seller · Island Remit Agents (Network plan)' },
+  { email: 'admin@transferhub.com', who: 'Admin · full console' },
+  { email: 'finance@transferhub.com', who: 'Finance · reconciliation, revenue, payouts' },
+  { email: 'buyer@transferhub.com', who: 'Buyer · Caribbean Imports Ltd (Plus plan)' },
+  {
+    email: 'seller@transferhub.com',
+    who: 'Seller · Island Remit Agents (main seller, Network plan)',
+  },
   { email: 'priya@postraders.tt', who: 'Child seller · Port of Spain Traders' },
-  { email: 'ana@caribimports.tt', who: 'Business buyer · Caribbean Imports Ltd (Plus)' },
-  { email: 'daniel.ramdial@example.tt', who: 'Individual seller · Daniel Ramdial' },
+  { email: 'daniel.ramdial@example.tt', who: 'Individual seller · has a network invitation' },
   { email: 'sasha.mohammed@example.tt', who: 'New customer · verification under review' },
-  { email: 'ops@transparenttransfers.com', who: 'Staff · operations' },
-  { email: 'compliance@transparenttransfers.com', who: 'Staff · compliance' },
-  { email: 'finance@transparenttransfers.com', who: 'Staff · finance and treasury' },
+  { email: 'compliance@transparenttransfers.com', who: 'Compliance · KYC review queue' },
+  { email: 'ops@transparenttransfers.com', who: 'Operations · deposits and withdrawals' },
 ];
 const DEMO_PASSWORD = 'Sandbox!2026';
 const SANDBOX = (process.env.NEXT_PUBLIC_APP_ENV ?? 'local') !== 'production';
@@ -58,7 +63,7 @@ function LoginForm() {
     setError(null);
     try {
       const me = await api.verifyMfa(code.replace(/\s/g, ''));
-      router.replace(me.memberships.length === 0 && me.user.isStaff ? '/ops' : '/');
+      router.replace(me.user.isStaff ? staffLanding(me.user.staffRoles) : '/');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'That code did not work.');
       setBusy(false);
