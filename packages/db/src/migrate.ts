@@ -147,6 +147,9 @@ export async function resetTestDatabase(pool: Pool): Promise<void> {
     throw new MigrationError(`Refusing to reset non-test database "${db}"`);
   }
   await pool.query(`
+    DROP SCHEMA IF EXISTS sandbox CASCADE;
+    DROP SCHEMA IF EXISTS ledger CASCADE;
+    DROP SCHEMA IF EXISTS app CASCADE;
     DROP SCHEMA IF EXISTS platform CASCADE;
     DROP TABLE IF EXISTS public.schema_migrations;
   `);

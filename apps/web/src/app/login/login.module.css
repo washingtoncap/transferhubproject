@@ -1,0 +1,85 @@
+.page {
+  min-height: 100vh;
+  background: var(--th-lavender);
+}
+.rule {
+  height: 4px;
+  background: var(--th-accent-rule);
+}
+.wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 420px);
+  gap: var(--th-space-4);
+  justify-content: center;
+  align-items: start;
+  padding: 56px var(--th-space-3);
+}
+.panel {
+  background: #fff;
+  border: 1px solid var(--th-border);
+  border-radius: 16px;
+  padding: var(--th-space-5);
+}
+.title {
+  margin: var(--th-space-4) 0 var(--th-space-3);
+  font-size: 26px;
+}
+.alt {
+  margin-top: var(--th-space-3);
+  font-size: 14px;
+}
+.row {
+  display: flex;
+  gap: var(--th-space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.demo {
+  background: #fff;
+  border: 1px dashed #b9aed0;
+  border-radius: 16px;
+  padding: var(--th-space-4);
+}
+.demo h2 {
+  font-size: 16px;
+}
+.demo p {
+  font-size: 14px;
+  margin: 0 0 var(--th-space-2);
+}
+.demo ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.demo button {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: var(--th-lavender);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: grid;
+  gap: 2px;
+}
+.demo button:hover {
+  border-color: var(--th-purple);
+}
+.demo strong {
+  font-size: 14px;
+  color: var(--th-navy);
+}
+.demo span {
+  font-size: 12px;
+  color: #5d5d72;
+}
+@media (max-width: 900px) {
+  .wrap {
+    grid-template-columns: minmax(0, 480px);
+    padding-top: var(--th-space-4);
+  }
+}
