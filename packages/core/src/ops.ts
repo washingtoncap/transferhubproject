@@ -30,9 +30,9 @@ export async function overview(db: Queryable) {
     kycQueue: toNumber(r.kyc),
     pendingDeposits: toNumber(r.deposits),
     withdrawalsAwaitingApproval: toNumber(r.withdrawals),
-    reconciliationBreaks:
-      recon.assets.filter((a) => a.status === 'break').length +
-      recon.unmatchedStatementLines.length,
+    // Number of currencies whose ledger cash differs from the partner statement. Unmatched
+    // statement lines explain a break; they are not counted as extra breaks.
+    reconciliationBreaks: recon.assets.filter((a) => a.status === 'break').length,
     deadJobs: toNumber(r.dead_jobs),
     customers: { total: toNumber(r.customers), approved: toNumber(r.approved) },
     last24h: {

@@ -108,6 +108,9 @@
   min-height: calc(100vh - 80px);
 }
 
+.layout > * {
+  min-width: 0;
+}
 .nav {
   border-right: 1px solid var(--th-border);
   background: var(--th-lavender);
@@ -140,6 +143,8 @@
   padding: var(--th-space-5) var(--th-space-4);
   max-width: 1120px;
   width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .footer {
@@ -158,8 +163,16 @@
     border-bottom: 1px solid var(--th-border);
     padding: var(--th-space-2) var(--th-space-3);
   }
+  .nav {
+    overflow-x: auto;
+  }
   .nav ul {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    gap: var(--th-space-1);
+    width: max-content;
+  }
+  .navItem {
+    white-space: nowrap;
   }
   .main {
     padding: var(--th-space-4) var(--th-space-3);

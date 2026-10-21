@@ -201,6 +201,19 @@ function ParentNetwork({ entity, detail }: { entity: EntitySummary; detail: Enti
   if (network.error) return <Alert tone="error">{network.error}</Alert>;
   if (!n) return <Loading label="Loading your network…" />;
 
+  if (n.childLimit === 0 && n.links.length === 0) {
+    return (
+      <Card title="Build your own seller network" tone="lavender">
+        <p style={{ margin: 0 }}>
+          Your current plan does not include child sellers. With a seller Network plan you can
+          invite other sellers, set their rate between the floor of {rate(n.childFloorE4)} and your
+          plan rate, and earn the difference on every US dollar they sell.{' '}
+          <a href="/billing">Compare plans</a>.
+        </p>
+      </Card>
+    );
+  }
+
   const activeLinks = n.links.filter((l) => l.status === 'active');
   const exampleChild =
     activeLinks[0]?.childRateE4 ?? Math.max(n.childFloorE4, n.parentRateE4 - 3000);

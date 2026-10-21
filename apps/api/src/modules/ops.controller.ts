@@ -69,14 +69,14 @@ export class OpsController {
 
   @Get('deposits')
   deposits(@CurrentUser() u: SessionUser, @Query('status') status?: string) {
-    requireStaff(u, ['operations', 'finance']);
+    requireStaff(u, ['operations']);
     return ops.opsDeposits(this.pool, status);
   }
 
   @Post('sandbox/bank-credit')
   @HttpCode(200)
   async bankCredit(@CurrentUser() u: SessionUser, @Body() body: Record<string, unknown>) {
-    requireStaff(u, ['operations', 'finance']);
+    requireStaff(u, ['operations']);
     requireSandbox(this.config.APP_ENV);
     const r = await simulateBankCredit(this.pool, this.config.PARTNER_WEBHOOK_SECRET, body);
     await recordAudit(this.pool, {

@@ -60,7 +60,7 @@ export function Grid({ children, min = 240 }: { children: ReactNode; min?: numbe
   return (
     <div
       className={s.grid}
-      style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}
+      style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(${min}px, 100%), 1fr))` }}
     >
       {children}
     </div>

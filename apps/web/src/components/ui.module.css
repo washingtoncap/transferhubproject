@@ -213,12 +213,19 @@
   color: var(--th-success);
 }
 
+.grid > * {
+  min-width: 0;
+}
 .tableWrap {
   overflow-x: auto;
+  max-width: 100%;
+  /* Contains visually hidden labels (position: absolute) so they scroll with the table. */
+  position: relative;
   margin-bottom: var(--th-space-3);
 }
 .table {
   width: 100%;
+  overflow-wrap: normal;
   border-collapse: collapse;
   font-size: 15px;
 }

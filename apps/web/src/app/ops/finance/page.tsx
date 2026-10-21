@@ -47,8 +47,9 @@ export default function FinancePage() {
   const [overview, recon, trades, pending] = data;
   const usd = recon.assets.find((a) => a.asset === 'USD')!;
   const ttd = recon.assets.find((a) => a.asset === 'TTD')!;
-  const breaks =
-    recon.assets.filter((a) => a.status === 'break').length + recon.unmatchedStatementLines.length;
+  const broken = recon.assets.filter((a) => a.status === 'break');
+  const breaks = broken.length;
+  const lines = recon.unmatchedStatementLines.length;
 
   const spreadShare = trades.reduce((s, t) => s + t.platformShareMinor, 0);
   const margins = trades.reduce((s, t) => s + t.parentMarginMinor, 0);
@@ -65,7 +66,7 @@ export default function FinancePage() {
       {breaks > 0 ? (
         <Alert
           tone="error"
-          title={`${breaks} reconciliation item${breaks === 1 ? '' : 's'} need attention`}
+          title={`${broken.map((a) => a.asset).join(' and ')} ${breaks === 1 ? 'does' : 'do'} not reconcile${lines > 0 ? ` · ${lines} unmatched bank line${lines === 1 ? '' : 's'}` : ''}`}
         >
           <a href="/ops/reconciliation">Open reconciliation</a> — assign each break by the next
           business day.
